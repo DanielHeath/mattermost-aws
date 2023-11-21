@@ -1,0 +1,4 @@
+#!/bin/bash
+set -exuo pipefail
+
+ssh -o StrictHostKeyChecking=no -i ~/.ssh/nerdy.party.pem -l ubuntu "$@"

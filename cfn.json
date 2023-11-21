@@ -1,0 +1,166 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Mattermost hosting",
+    "Parameters": {
+        "InstanceType": {
+            "Description": "Instance type",
+            "Type": "String"
+        },
+        "Region": {
+            "Description": "AWS region",
+            "Type": "String"
+        },
+        "ImageId": {
+            "Type": "String",
+            "Description": "AMI to use for instances"
+        },
+        "KeyName": {
+            "Type": "String",
+            "Description": "Key pair to login to instance"
+        },
+        "SITEURL": {
+            "Type": "String",
+            "Description": ""
+        },
+        "SMTPSERVER": {
+            "Type": "String",
+            "Description": ""
+        },
+        "SMTPUSERNAME": {
+            "Type": "String",
+            "Description": ""
+        },
+        "SMTPPASSWORD": {
+            "Type": "String",
+            "Description": ""
+        },
+        "SMTPCONNECTIONSECURITY": {
+            "Type": "String",
+            "Description": ""
+        },
+        "SMTPPORT": {
+            "Type": "String",
+            "Description": ""
+        }
+    },
+    "Outputs": {
+        "IpAddr": {
+            "Description": "IP address of created server",
+            "Value": {
+                "Fn::GetAtt": [
+                    "Server",
+                    "PublicIp"
+                ]
+            }
+        }
+    },
+    "Resources": {
+      "Server": {
+            "Type" : "AWS::EC2::Instance",
+            "Properties" : {
+                "IamInstanceProfile": {"Ref": "InstanceProfile" },
+                "InstanceType": {"Ref": "InstanceType"},
+                "ImageId": {"Ref": "ImageId"},
+                "KeyName":  {"Ref": "KeyName"},
+                "InstanceInitiatedShutdownBehavior" : "stop",
+                "PropagateTagsToVolumeOnCreation" : true,
+                "BlockDeviceMappings": [{
+                    "DeviceName" : "/dev/sda1",
+                    "Ebs" : {
+                        "DeleteOnTermination" : true,
+                        "Encrypted" : true,
+                        "VolumeSize" : 8,
+                        "VolumeType" : "gp3"
+                    },
+                    "VirtualName" : "name"
+                }],
+
+                "Tags" : [],
+
+                "UserData": {"Fn::Base64": {"Fn::Join": ["", [
+                    "#cloud-boothook \n",
+                    "#!/bin/bash \n",
+
+                    "echo MM_SERVICESETTINGS_SITEURL=", {"Ref": "SITEURL"}, " >> /tmp/fish\n",
+                    "echo MM_EMAILSETTINGS_SMTPSERVER=", {"Ref": "SMTPSERVER"}, " >> /tmp/fish\n",
+                    "echo MM_EMAILSETTINGS_SMTPUSERNAME=", {"Ref": "SMTPUSERNAME"}, " >> /tmp/fish\n",
+                    "echo MM_EMAILSETTINGS_SMTPPASSWORD=", {"Ref": "SMTPPASSWORD"}, " >> /tmp/fish\n",
+                    "echo MM_EMAILSETTINGS_CONNECTIONSECURITY=", {"Ref": "SMTPCONNECTIONSECURITY"}, " >> /tmp/fish\n",
+                    "echo MM_EMAILSETTINGS_SMTPPORT=", {"Ref": "SMTPPORT"}, " >> /tmp/fish\n",
+                    "echo MM_FILESETTINGS_AMAZONS3ENDPOINT=", {"Fn::Join": ["", ["s3.", {"Ref": "Region"}, ".amazonaws.com"]]}, " >> /tmp/fish\n",
+                    "echo MM_FILESETTINGS_AMAZONS3BUCKET=", {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-uploads"]]}, " >> /tmp/fish\n",
+                    "sudo chown mattermost /tmp/fish\n",
+                    "sudo mv /tmp/fish /opt/mattermost/environment-per-stack\n",
+                    "\n"
+                ]]}}
+            }
+        },
+        "InstanceRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": {"Service": "ec2.amazonaws.com"},
+                        "Action": "sts:AssumeRole"
+                    }]
+                },
+                "Description": "Allow access to ses & s3",
+                "Policies": [{
+                    "PolicyName": {"Fn::Join": ["", ["instance-write-s3-", {"Ref": "AWS::StackName"}]]},
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                            "Sid": "InstanceAccess",
+                            "Effect": "Allow",
+                            "Action": ["s3:*", "ses:*"],
+                            "Resource": "*"
+                        }]
+                    }
+                }]
+            }
+        },
+        "InstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {"Roles": [{"Ref": "InstanceRole"}]}
+        },
+        "StorageBucket": {
+            "Type": "AWS::S3::Bucket",
+            "DeletionPolicy" : "Retain",
+            "UpdateReplacePolicy" : "Retain",
+            "Properties": {
+                "BucketName": {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-uploads"]]},
+                "WebsiteConfiguration": {
+                    "IndexDocument": "index.html",
+                    "ErrorDocument": "error.html"
+                },
+                "VersioningConfiguration": { "Status": "Enabled" },
+                "OwnershipControls": {
+                    "Rules": [
+                        {
+                            "ObjectOwnership": "BucketOwnerEnforced"
+                        }
+                    ]
+                },
+                "LifecycleConfiguration": {
+                    "Rules": [
+                        {
+                            "ExpiredObjectDeleteMarker": true,
+                            "Id": "Only keep a few backups",
+                            "Status": "Enabled",
+                            "NoncurrentVersionExpiration": { "NoncurrentDays": 60 },
+                            "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 2 }
+                        }
+                    ]
+                },
+                "PublicAccessBlockConfiguration": {
+                    "BlockPublicAcls" : true,
+                    "BlockPublicPolicy" : true,
+                    "IgnorePublicAcls" : true,
+                    "RestrictPublicBuckets" : true
+                }
+            }
+        }
+    }
+}
