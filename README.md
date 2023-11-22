@@ -24,5 +24,5 @@ Create a file named `cloudflare_zone` contains the cloudflare zone ID for your i
 Create a file named `cloudflare_api_key` contains a cloudflare API key that can set DNS for that zone
 `cp secret.json.sample secret.json` and fill out your own settings (setup SES for your domain to get SMTP credentials)
 Edit `ssh-command` to use your key
-Edit `aws-profile` to specify your AWS credentials
+Edit `in-aws-profile` to specify your AWS credentials
 Run `./update.sh`
