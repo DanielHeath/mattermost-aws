@@ -61,8 +61,10 @@ function cfapi
 JSON
   )"
 
-  # Destroy existing DNS records
-  for record in $( cfapi "dns_records" | jq -r ".result[] | select(.type == \"A\").id" ) ; do
+  SITE_DOMAIN="$(jq -r 'map((select(.ParameterKey == "SITEURL") | .ParameterValue))[0]' "$CONFIGPATH" | tail -c +9)"
+
+  # Destroy existing DNS records for that domain
+  for record in $( cfapi "dns_records" | jq --arg domain "$SITE_DOMAIN" -r ".result[] | select(.type == \"A\") | select(.name = \$domain) .id" ) ; do
     cfapi "dns_records/$record" -X DELETE
   done
 
