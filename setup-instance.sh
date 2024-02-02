@@ -1,6 +1,16 @@
 #!/bin/bash
 set -exuo pipefail
 
+CADDY_VERSION=2.7.6
+
+MM_VERSION="9.4.2"
+if [ "$(uname -p)" = 'x86_64' ] ; then
+  ARCH="amd64"
+else
+  ARCH="arm64"
+fi
+PLAYBOOKS_VERSION="v1.39.1"
+
 export DEBIAN_FRONTEND=noninteractive
 apt-get remove -y snapd
 apt update
@@ -13,14 +23,14 @@ apt-get install --no-install-recommends -y \
 apt autoremove -y
 
 cd /tmp
-wget https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip
-unzip awscli-exe-linux-aarch64.zip
+wget "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -p).zip"
+unzip "awscli-exe-linux-$(uname -p).zip"
 ./aws/install
-rm -rf aws awscli-exe-linux-aarch64.zip
+rm -rf aws "awscli-exe-linux-$(uname -p).zip"
 
-wget https://github.com/caddyserver/caddy/releases/download/v2.7.5/caddy_2.7.5_linux_arm64.deb
-dpkg -i caddy_2.7.5_linux_arm64.deb
-rm caddy_2.7.5_linux_arm64.deb
+wget "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_${ARCH}.deb"
+dpkg -i "caddy_${CADDY_VERSION}_linux_${ARCH}.deb"
+rm "caddy_${CADDY_VERSION}_linux_${ARCH}.deb"
 
 cat <<-CADDYFILE | sudo tee /etc/caddy/Caddyfile
 nerdy.party
@@ -44,22 +54,15 @@ su postgres -c 'createuser --superuser ubuntu'
 su postgres -c 'createuser --superuser root'
 su mattermost -c 'createdb mattermost'
 
-MM_VERSION="9.2.2"
-if [ "$(uname -p)" = 'x86_64' ] ; then
-  MM_ARCH="amd64"
-else
-  MM_ARCH="arm64"
-fi
-wget -q https://releases.mattermost.com/$MM_VERSION/mattermost-$MM_VERSION-linux-$MM_ARCH.tar.gz
-tar -xzf "mattermost-$MM_VERSION-linux-$MM_ARCH.tar.gz"
-rm "mattermost-$MM_VERSION-linux-$MM_ARCH.tar.gz"
+wget -q https://releases.mattermost.com/$MM_VERSION/mattermost-$MM_VERSION-linux-${ARCH}.tar.gz
+tar -xzf "mattermost-$MM_VERSION-linux-${ARCH}.tar.gz"
+rm "mattermost-$MM_VERSION-linux-${ARCH}.tar.gz"
 
 mv mattermost /opt
 mkdir /opt/mattermost/data
 mkdir /opt/mattermost/plugins
 touch /opt/mattermost/logs/mattermost.log
 
-PLAYBOOKS_VERSION="v1.38.0"
 wget -O "/opt/mattermost/prepackaged_plugins/playbooks-$PLAYBOOKS_VERSION.tar.gz" -q "https://github.com/mattermost/mattermost-plugin-playbooks/releases/download/$PLAYBOOKS_VERSION/playbooks-$PLAYBOOKS_VERSION.tar.gz"
 (
   cd /opt/mattermost/plugins
