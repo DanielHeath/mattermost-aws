@@ -1,7 +1,7 @@
 #!/bin/bash
 set -exuo pipefail
 
-CADDY_VERSION=2.7.6
+# CADDY_VERSION=2.7.6
 
 MM_VERSION="9.4.2"
 if [ "$(uname -p)" = 'x86_64' ] ; then
@@ -28,14 +28,14 @@ unzip "awscli-exe-linux-$(uname -p).zip"
 ./aws/install
 rm -rf aws "awscli-exe-linux-$(uname -p).zip"
 
-wget "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_${ARCH}.deb"
-dpkg -i "caddy_${CADDY_VERSION}_linux_${ARCH}.deb"
-rm "caddy_${CADDY_VERSION}_linux_${ARCH}.deb"
+# wget "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_${ARCH}.deb"
+# dpkg -i "caddy_${CADDY_VERSION}_linux_${ARCH}.deb"
+# rm "caddy_${CADDY_VERSION}_linux_${ARCH}.deb"
 
-cat <<-CADDYFILE | sudo tee /etc/caddy/Caddyfile
-nerdy.party
-reverse_proxy :8065
-CADDYFILE
+# cat <<-CADDYFILE | sudo tee /etc/caddy/Caddyfile
+# nerdy.party
+# reverse_proxy :8065
+# CADDYFILE
 
 # Enable swap
 dd if=/dev/zero of=/swapfile bs=64M count=32
@@ -97,6 +97,7 @@ ENV
 
 chown -R mattermost:mattermost /opt/mattermost
 chmod -R g+w /opt/mattermost
+setcap cap_net_bind_service=+ep /opt/mattermost/bin/mattermost
 
 cat <<-SERVICE | tee /etc/systemd/system/mattermost.service
 [Unit]
