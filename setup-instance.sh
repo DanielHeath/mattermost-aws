@@ -192,6 +192,7 @@ cat <<-SQL > /opt/mattermost/restore.sh
 #!/bin/bash
 set -exuo pipefail
 systemctl stop mattermost
+swapon /swapfile
 dropdb mattermost
 createdb mattermost
 aws s3 cp "s3://\$MM_FILESETTINGS_AMAZONS3BUCKET/pg_dump/latest.pgdump" - | gunzip | psql mattermost
