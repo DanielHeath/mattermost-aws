@@ -3,7 +3,7 @@ set -exuo pipefail
 
 # CADDY_VERSION=2.7.6
 
-MM_VERSION="9.4.2"
+MM_VERSION="9.5.2"
 if [ "$(uname -p)" = 'x86_64' ] ; then
   ARCH="amd64"
 else
