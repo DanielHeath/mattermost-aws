@@ -3,13 +3,20 @@ set -exuo pipefail
 
 # CADDY_VERSION=2.7.6
 
-MM_VERSION="9.5.2"
+MM_VERSION="10.4.2"
 if [ "$(uname -p)" = 'x86_64' ] ; then
   ARCH="amd64"
 else
   ARCH="arm64"
 fi
-PLAYBOOKS_VERSION="v1.39.1"
+
+
+if [ "$(uname -p)" = 'x86_64' ] ; then
+  MM_ARCH="amd64"
+else
+  MM_ARCH="arm64"
+fi
+PLAYBOOKS_VERSION="v1.40.0"
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get remove -y snapd
@@ -63,7 +70,8 @@ mkdir /opt/mattermost/data
 mkdir /opt/mattermost/plugins
 touch /opt/mattermost/logs/mattermost.log
 
-wget -O "/opt/mattermost/prepackaged_plugins/playbooks-$PLAYBOOKS_VERSION.tar.gz" -q "https://github.com/mattermost/mattermost-plugin-playbooks/releases/download/$PLAYBOOKS_VERSION/playbooks-$PLAYBOOKS_VERSION.tar.gz"
+wget -O "/opt/mattermost/prepackaged_plugins/playbooks-$PLAYBOOKS_VERSION.tar.gz" -q "https://github.com/mattermost/mattermost-plugin-playbooks/releases/download/$PLAYBOOKS_VERSION/mattermost-plugin-playbooks-$PLAYBOOKS_VERSION-linux-$MM_ARCH.tar.gz"
+
 (
   cd /opt/mattermost/plugins
   wget -O "mattermost-plugin-focalboard.tar.gz" -q "https://github.com/mattermost/focalboard/releases/download/v7.10.6/mattermost-plugin-focalboard.tar.gz"

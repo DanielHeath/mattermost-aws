@@ -80,7 +80,7 @@
                 "UserData": {"Fn::Base64": {"Fn::Join": ["", [
                     "#cloud-boothook \n",
                     "#!/bin/bash \n",
-
+                    "echo '' >> /tmp/envvars\n",
                     "echo MM_SERVICESETTINGS_SITEURL=", {"Ref": "SITEURL"}, " >> /tmp/fish\n",
                     "echo MM_EMAILSETTINGS_SMTPSERVER=", {"Ref": "SMTPSERVER"}, " >> /tmp/fish\n",
                     "echo MM_EMAILSETTINGS_SMTPUSERNAME=", {"Ref": "SMTPUSERNAME"}, " >> /tmp/fish\n",
