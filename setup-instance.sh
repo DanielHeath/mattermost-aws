@@ -68,6 +68,7 @@ rm "mattermost-$MM_VERSION-linux-${ARCH}.tar.gz"
 mv mattermost /opt
 mkdir /opt/mattermost/data
 mkdir /opt/mattermost/plugins
+mkdir /opt/mattermost/prepackaged_plugins
 touch /opt/mattermost/logs/mattermost.log
 
 wget -O "/opt/mattermost/prepackaged_plugins/playbooks-$PLAYBOOKS_VERSION.tar.gz" -q "https://github.com/mattermost/mattermost-plugin-playbooks/releases/download/$PLAYBOOKS_VERSION/mattermost-plugin-playbooks-$PLAYBOOKS_VERSION-linux-$MM_ARCH.tar.gz"
